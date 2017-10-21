@@ -63,15 +63,44 @@
     <option value="600">600km</option>
     <option value="1000">1000km</option>
   </select>
-  </div> <!-- columns 1--4  -->
+
+  <!-- Pick from any timezone, good place for javascript but copy and paste is so easy -->
+  <label>Time Zone</label>
+  <select name="tz" id="timezone">
+    <option value="-08:00">-8 GMT</option>
+    <option value="00:00">GMT</option>
+    <option value="-11:00">-11 GMT</option>
+    <option value="-10:00">-10 GMT</option>
+    <option value="-09:00">-9 GMT</option>
+    <option value="-07:00">-7 GMT</option>
+    <option value="-06:00">-6 GMT</option>
+    <option value="-05:00">-5 GMT</option>
+    <option value="-04:00">-4 GMT</option>
+    <option value="-03:00">-3 GMT</option>
+    <option value="-02:00">-2 GMT</option>
+    <option value="-01:00">-1 GMT</option>
+    <option value="+11:00">+11 GMT</option>
+    <option value="+10:00">+10 GMT</option>
+    <option value="+09:00">+9 GMT</option>
+    <option value="+08:00">+8 GMT</option>
+    <option value="+07:00">+7 GMT</option>
+    <option value="+06:00">+6 GMT</option>
+    <option value="+05:00">+5 GMT</option>
+    <option value="+04:00">+4 GMT</option>
+    <option value="+03:00">+3 GMT</option>
+    <option value="+02:00">+2 GMT</option>
+    <option value="+01:00">+1 GMT</option>
+  </select>
+  </div>
+  </div> <!-- columns 14  -->
   <div class="col-md-6">
     <label>Begins at</label>
     <input type=date name="begin_date" id="begin_date" value="2017-01-01" />
     <input type=time name="begin_time" id="begin_time" value="00:00"    />
-  </div> <!-- columns 5-10 -->
-  </div> <!-- row -->
+  </div>
+  </div>
 
-  <br />  <!-- Cosmetic -- a little vertical space -->
+  <br />  <!-- Cosmetic: a little vertical space -->
   <!-- Although we do not use tables for general page layout, they are
        appropriate for something that really is a table, like this
        one.  We allocate it the full 12 columns of the bootstrap grid.
@@ -89,21 +118,12 @@
       </tr>
    {% for row in range(20) %}
     <tr class="control">
-      <!-- Dist (mi) -->
-      <td><input name="miles" type="number" 
-           min="0" max="900" size="5" /></td>
-      <!-- Dist (km) -->
-      <td><input name="km" type="text"
-	   min="0" max="1100" size="5" /> </td>
-      <!-- Location (optional) -->
+      <td><input name="miles" type="number" min="0" max="900" size="5" /></td>
+      <td><input name="km" type="text"min="0" max="1100" size="5" /> </td>
       <td><input name="location" type="text" 
-        placeholder="Optional location name"
-	size="20" /> </td>
-      <!-- Open time (read only, set by JavaScript function -->
+        placeholder="Optional location name"size="20" /> </td>
       <td><input name="open" type="datetime" value="" readonly /></td>
-      <!-- Close time (read only, set by JavaScript function -->
       <td><input name="close" type="datetime" value="" readonly /></td>
-      <!-- Notes (error messages for this row) -->
       <td class="notes"> &nbsp; </td>
     </tr>
     {% endfor %}
@@ -112,9 +132,10 @@
   </div> <!-- row -->
 </form>
 
+//Why we dont make this a js file is beyond me
 <script type="text/javascript">
 
-  var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ;
+  var SCRIPT_ROOT = {{ request.script_root|tojson|safe }} ; //My linter really hates this
   var TIME_CALC_URL = SCRIPT_ROOT + "/_calc_times";
 
   // Pass calctimes a <td> element containing the data for a control.
@@ -122,19 +143,28 @@
   // fill in open and close times in a human-readable format.
   // (If we want to also keep the ISO-formatted times, we'll need to
   // stash them in hidden fields.) 
+  //Added some Bonus fields to begin date, time, distance, and timestamp
   function calc_times(control) {
     var km = control.find("input[name='km']").val();
     var open_time_field = control.find("input[name='open']");
     var close_time_field = control.find("input[name='close']");
+    var bd = $("#begin_date").val();				//added begin date
+    var bt = $("#begin_time").val();				//added begin time
+    var brev_dist = $("select[name=distance]").val();		//added distance of brevet
+    var tz = $("select[name=tz]").val();			//tz for timestamp calcs
     
     $.getJSON(TIME_CALC_URL, { km: km }, 
       // response handler
       function(data) {
-         var times = data.result;
-         console.log("Got a response: " +  times);
-         console.log("Response.open = " + times.open);
-         open_time_field.val( moment(times.open).format("ddd M/D H:mm"));
-         close_time_field.val( moment(times.close).format("ddd M/D H:mm"));
+        var times = data.result;
+        if (!times) {
+            close_time_field.val("control must be < 121% of brevet!");
+            open_time_field.val("control must be < 121% of brevet!");
+        } else {
+        console.log("Got a response: " +  times);
+        console.log("Response.open = " + times.open);
+        open_time_field.val( moment(times.open).format("ddd M/D H:mm"));
+        close_time_field.val( moment(times.close).format("ddd M/D H:mm"));
        } // end of handler function
      );// End of getJSON
     }
